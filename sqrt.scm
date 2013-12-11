@@ -1,6 +1,9 @@
 #! /usr/bin/guile -s 
 !#
 
+; my first scheme program
+; calculate the square root of a given number
+
 (define (square x) (* x x))
 
 (define (averageof x y) (/ (+ x y) 2.0))
