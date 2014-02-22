@@ -164,3 +164,138 @@
 (display (cube tt3))
 (newline)
 
+; factorial with continuation passing style
+(define (fact n)
+ (define (fact-iter n f)
+  (if (= n 1)
+   (f 1)
+   (fact-iter (- n 1) (lambda (x) (f (* n x))))))
+ (fact-iter n (lambda (x) (display x))))
+
+(fact 6)
+(newline)
+
+; exercise 1.10
+(define (A x y)
+ (cond ((= y 0) 0)
+  ((= x 0) (* 2 y))
+  ((= y 1) 2)
+  (else (A (- x 1) (A x (- y 1))))))
+
+(define (f n) (A 0 n))
+(define (g n) (A 1 n))
+(define (h n) (A 2 n))
+
+(display "-----------")
+(newline)
+(display (f 1))
+(newline)
+(display (f 2))
+(newline)
+(display (f 3))
+(newline)
+(display (f 4))
+(newline)
+
+(display "-----------")
+(newline)
+(display (g 1))
+(newline)
+(display (g 2))
+(newline)
+(display (g 3))
+(newline)
+(display (g 4))
+(newline)
+
+(display "-----------")
+(newline)
+(display (h 1))
+(newline)
+(display (h 2))
+(newline)
+(display (h 3))
+(newline)
+(display (h 4))
+(newline)
+
+; fib with continuation passing style
+(define (fib n)
+  (define (fib-iter i a b f)
+	(cond ((= i n) (f a))
+		  (else (fib-iter (+ i 1) b (+ a b) f))))
+  (fib-iter 1 0 1 (lambda (x) (display x))))
+
+;(display (fib 10))
+(fib 10)
+(newline)
+
+(define (count-change amount)
+ (cc amount 5))
+
+(define (cc amount kinds-of-coin)
+ (cond 
+  ((= amount 0) 1)
+  ((or (< amount 0) (= kinds-of-coin 0)) 0)
+  (else (+ (cc amount (- kinds-of-coin 1))
+		 (cc (- amount (first-denominator kinds-of-coin)) kinds-of-coin)))))
+(define (first-denominator kinds-of-coin)
+ (cond 
+  ((= kinds-of-coin 1) 1)
+  ((= kinds-of-coin 2) 5)
+  ((= kinds-of-coin 3) 10)
+  ((= kinds-of-coin 4) 25)
+  ((= kinds-of-coin 5) 50)))
+
+(display (count-change 100))
+(newline)
+
+; exercise 1.11
+(define (recursf n)
+ (cond 
+  ((< n 0) (display "invalid argument"))
+  ((< n 3) n)
+  (else (+ (recursf (- n 1)) (* 2 (recursf (- n 2))) (* 3 (recursf (- n 3)))))))
+
+(display (recursf 10))
+(newline)
+
+(define (iterf n)
+ (define (iterf-iter i a b c)
+  (cond ((= i n) c)
+		(else (iterf-iter (+ i 1) b c (+ c (* 2 b) (* 3 a))))))
+ (cond 
+  ((< n 0) (display "invalid argument"))
+  ((< n 3) n)
+  (else (iterf-iter 2 0 1 2))))
+
+(display (iterf 10))
+(newline)
+
+; exercise 1.12 
+(define (pascal-triangle i j)
+ (cond ((or (< i 0) (< j 0) (< i j)) 0)
+  ((and (= i 1) (= j 1)) 1)
+  (else (+ (pascal-triangle (- i 1) (- j 1)) (pascal-triangle (- i 1) j)))))
+
+(display (pascal-triangle 5 3))
+(newline)
+
+(define (even? x)
+ (= (remainder x 2) 0))
+
+(define (fast-exp x n)
+ (cond ((= n 0) 1)
+  ((even? n) (fast-exp (square x) (/ n 2)))
+  (else (* x (fast-exp x (- n 1))))))
+
+(define (fast-exp x n)
+ (define (fast-exp-iter x n r)
+  (cond ((= n 0) r)
+		((even? n) (fast-exp-iter (square x) (/ n 2) r))
+		(else (fast-exp-iter x (- n 1) (* x r)))))
+ (fast-exp-iter x n 1))
+
+(display (fast-exp 2 9))
+(newline)
+

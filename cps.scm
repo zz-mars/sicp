@@ -1,4 +1,3 @@
-#lang racket
 (define (factCPS n r)
   (if (= n 0)
       (r 1)
