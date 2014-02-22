@@ -299,3 +299,100 @@
 (display (fast-exp 2 9))
 (newline)
 
+; exercise 1.18
+(define (mul a b)
+ (define (double x) (* x 2))
+ (define (halve x) (/ x 2))
+ (define (mul-iter a b r)
+  (cond ((= b 0) r)
+   ((even? b) (mul-iter (double a) (halve b) r))
+   (else (mul-iter a (- b 1) (+ r a)))))
+ (mul-iter a b 0))
+
+(display (mul 45 8))
+(newline)
+
+; exercise 1.19
+;(define (mktrans p q) (cons p q))
+;(define (trans-p t) (car t))
+;(define (trans-q t) (cdr t))
+;
+;(define (fib n)
+; (define (trans-exp t n)	
+;  (define p (trans-p t))
+;  (define q (trans-q t))
+;  (cond ((= n 0) t)
+;   ((even? n) (trans-exp (mktrans (+ (square p) (square q)) (+ (square q) (* 2 p q))) (/ n 2)))
+;   (else (trans-exp
+; (define (fib-iter n p q)
+;  (define single-step-trans-p 0)
+;  (define single-step-trans-q 1)
+
+(define (fib n)
+ ; initial state : (a,b)
+ ; initial transformation : (p,q)
+ ; do the transformation times : count
+ ;
+ ; When count is even, we can iter with a new transformation 
+ ; which is square of the original one and halve the count
+ ; When count is odd, do the transformation for once, 
+ ; EAT THE 'SINGLE' STEP TRANSFORMATION!
+ (define (fib-iter a b p q count)
+  (cond ((= count 0) b)
+   ((even? count)
+	(fib-iter a b
+	 (+ (square p) (square q))
+	 (+ (square q) (* 2 p q))
+	 (/ count 2)))
+   (else (fib-iter (+ (* q (+ a b)) (* a p))
+		  (+ (* b p) (* a q))
+		  p q (- count 1)))))
+ (fib-iter 1 0 0 1 n))
+
+(display (fib 10))
+(newline)
+
+(define (zgcd a b)
+ (if (= b 0) 
+  a
+  (zgcd b (remainder a b))))
+
+; exercise 1.21
+(define (smallest-divisor x)
+ (define (divided? i)
+  (= (remainder x i) 0))
+ (define (find-smallest-divisor i)
+  (cond ((> (square i) x) x)
+   ((divided? i) i)
+   (else (find-smallest-divisor (+ i 1)))))
+ (find-smallest-divisor 2))
+
+(display (smallest-divisor 199))
+(newline)
+(display (smallest-divisor 1999))
+(newline)
+(display (smallest-divisor 19999))
+(newline)
+
+(define (prime? x)
+ (= (smallest-divisor x) x))
+
+(define (timed-prime-test n)
+ (newline)
+ (display n)
+ (start-prime-test n (runtime)))
+
+(define (start-prime-test n start-time)
+ (define (report-prime elapsed-time)
+  (display " *** ")
+  (display elapsed-time)
+  (newline))
+ (if (prime? n)
+  (report-prime (- (runtime) start-time))
+  (timed-prime-test (+ n 1))))
+
+(timed-prime-test 1000)
+(timed-prime-test 10000)
+(timed-prime-test 100000)
+(timed-prime-test 1000000)
+
