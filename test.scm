@@ -377,22 +377,127 @@
 (define (prime? x)
  (= (smallest-divisor x) x))
 
-(define (timed-prime-test n)
- (newline)
- (display n)
- (start-prime-test n (runtime)))
+; runtime error?
+;(define (timed-prime-test n)
+; (newline)
+; (display n)
+; (start-prime-test n (runtime)))
+;
+;(define (start-prime-test n start-time)
+; (define (report-prime elapsed-time)
+;  (display " *** ")
+;  (display elapsed-time)
+;  (newline))
+; (if (prime? n)
+;  (report-prime (- (runtime) start-time))
+;  (timed-prime-test (+ n 1))))
+;
+;(timed-prime-test 1000)
+;(timed-prime-test 10000)
+;(timed-prime-test 100000)
+;(timed-prime-test 1000000)
 
-(define (start-prime-test n start-time)
- (define (report-prime elapsed-time)
-  (display " *** ")
-  (display elapsed-time)
-  (newline))
- (if (prime? n)
-  (report-prime (- (runtime) start-time))
-  (timed-prime-test (+ n 1))))
+;exercise 1.23
+(define (smallest-divisor n)
+ (define (next i) (if (= i 2) 3 (+ i 2)))
+ (define (divided? i)
+  (= (remainder n i) 0))
+ (define (find-divisor i)
+  (cond ((> (square i) n) n)
+   ((divided? i) i)
+   (else (find-divisor (next i)))))
+ (find-divisor 2))
 
-(timed-prime-test 1000)
-(timed-prime-test 10000)
-(timed-prime-test 100000)
-(timed-prime-test 1000000)
+(display (smallest-divisor 199))
+(newline)
+(display (smallest-divisor 1999))
+(newline)
+(display (smallest-divisor 19999))
+(newline)
+
+(define (sigma from to next-func term-func)
+ (define (iter from r)
+  (if (> from to)
+  r
+  (iter (next-func from) (+ r (term-func from)))))
+ (iter from 0))
+
+(define (next-func1 x) (+ x 1))
+(define (next-func2 x) (+ x 4))
+(define (term1 x) x)
+(define (term2 x) (* x x x))
+(define (term3 x) (/ 1.0 (* x (+ x 2))))
+
+(display (sigma 1 100 next-func1 term1))
+(newline)
+(display (sigma 1 100 next-func1 term2))
+(newline)
+(display (* 8 (sigma 1 10000 next-func2 term3)))
+(newline)
+
+(define (definite-integral f a b dx)
+ (define (next x) (+ x dx))
+ (* dx (sigma (+ a (/ dx 2.0)) b next f)))
+
+(display (definite-integral cube 0 1 0.01))
+(newline)
+(display (definite-integral cube 0 1 0.001))
+(newline)
+
+;exercise 1.29
+; integral with simon's rule
+(define (integral-with-simon-rule f a b n)
+ (define (even-odd k)
+  (if (= (remainder k 2) 0) 0 1))
+ (define (inc x) (+ x 1))
+ (define (new-func k)
+  (* (+ 2 (* 2 (even-odd k))) (f (+ a (* k (/ (- b a) n))))))
+ (* (/ (- b a) (* 3 n)) (- (sigma 0 n inc new-func) (+ (f a) (f b)))))
+
+(display (integral-with-simon-rule cube 0 1.0 100))
+(newline)
+(display (integral-with-simon-rule cube 0 1.0 1000))
+(newline)
+
+; exercise 1.31
+(define (mul-sigma f from next to)
+ (define (iter a r)
+  (if (> a to)
+   r
+   (iter (next a) (* r (f a)))))
+ (iter from 1.0))
+
+; recursive version of mul-sigma
+; This leads to stack overflow
+; LOL
+;(define (mul-sigma f from next to)
+; (if (> from to)
+;  1
+;  (* (f from) (mul-sigma f (next from) next to))))
+
+(define (test-func k)
+ (/ (* (- k 1) (+ k 1)) (square k)))
+(define (next k) (+ k 2))
+
+(display (* 4 (mul-sigma test-func 3 next 10000)))
+(newline)
+
+; exercise 1.32 : more general accumulate
+(define (accumulator combiner base-value term-func from next to)
+ (define (iter k r)
+  (if (> k to)
+   r
+   (iter (next k) (combiner (term-func k) r))))
+ (iter from base-value))
+
+(define (add-sigma f a next b)
+ (accumulator + 0.0 f a next b))
+(define (mul-sigma f a next b)
+ (accumulator * 1.0 f a next b))
+
+(display (add-sigma term1 1 next-func1 100))
+(newline)
+
+(display (* 4 (mul-sigma test-func 3 next 10000)))
+(newline)
 
