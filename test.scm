@@ -374,9 +374,6 @@
 (display (smallest-divisor 19999))
 (newline)
 
-(define (prime? x)
- (= (smallest-divisor x) x))
-
 ; runtime error?
 ;(define (timed-prime-test n)
 ; (newline)
@@ -407,6 +404,9 @@
    ((divided? i) i)
    (else (find-divisor (next i)))))
  (find-divisor 2))
+
+(define (prime? x)
+ (= (smallest-divisor x) x))
 
 (display (smallest-divisor 199))
 (newline)
@@ -495,9 +495,54 @@
 (define (mul-sigma f a next b)
  (accumulator * 1.0 f a next b))
 
-(display (add-sigma term1 1 next-func1 100))
+; accumulator as return value
+(define (accumulator combiner base-value)
+ (lambda (term-func from next to) 
+  (define (iter k r)
+   (if (> k to)
+	r
+	(iter (next k) (combiner (term-func k) r))))
+  (iter from base-value)))
+
+(define add-sigma (accumulator + 0.0))
+(define mul-sigma (accumulator * 1.0))
+
+(display "---------------------")
+(newline)
+
+(define (inc x) (+ x 1))
+
+(display (add-sigma square 3 inc 1000))
 (newline)
 
 (display (* 4 (mul-sigma test-func 3 next 10000)))
+(newline)
+
+(define (filtered-accumulaor-generator combiner base-value)
+ (lambda (term-func from next to the-filter)
+  (define (iter k r)
+   (cond ((> k to) r)
+	((the-filter k) (iter (next k) (combiner r (term-func k))))
+	(else (iter (next k) r))))
+  (iter from base-value)))
+
+(define filter-add-sigma (filtered-accumulaor-generator + 0))
+(define filter-mul-sigma (filtered-accumulaor-generator * 1))
+
+(display "sum of square of the prime numbers between 3 to 1000")
+(newline)
+(display (filter-add-sigma square 3 inc 1000 prime?))
+(newline)
+
+(display ((lambda (x) (+ x 3)) 4))
+(newline)
+
+; using let
+(define (f x y)
+ (let ((a (+ 1 (* x y)))
+	   (b (- 1 y)))
+  (+ (* x (square a)) (* y b) (* a b))))
+
+(display ((lambda (x) (+ (let ((x 3)) (+ x (* x 10))) x)) 5))
 (newline)
 
