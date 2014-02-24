@@ -546,3 +546,91 @@
 (display ((lambda (x) (+ (let ((x 3)) (+ x (* x 10))) x)) 5))
 (newline)
 
+(define (<= a b) (not (> a b)))
+(define (>= a b) (not (< a b)))
+
+(define (half-interval-method f a b)
+ (define (search-root f negative-point positive-point)
+  (define (close-enough? a b) (< (abs (- a b)) 0.0001))
+  (let ((mid-point (average negative-point positive-point)))
+	(if (close-enough? negative-point positive-point) 
+	  mid-point
+	  (let ((mid-value (f mid-point)))
+		(cond ((> mid-value 0) (search-root f negative-point mid-point))
+			  ((< mid-value 0) (search-root f mid-point positive-point))
+			  (else mid-point))))))
+ ; check if the end points have different sign
+ (let ((fa (f a))
+	  (fb (f b)))
+  (cond ((and (<= fa 0) (>= fb 0)) (search-root f a b))
+   ((and (>= fa 0) (<= fb 0)) (search-root f b a))
+   (else (display "end points have the same sign!")
+	(newline)))))
+
+(display (half-interval-method sin 4.0 3.2))
+(newline)
+(display (half-interval-method sin 4.0 2.0))
+(newline)
+(display (half-interval-method (lambda (x) (- (cube x) (* 2 x) 3)) 1.0 2.0))
+(newline)
+
+(define (fix-point f)
+ (define (find-fix-point guess)
+  (define (close-enough? a b)
+   (< (abs (- a b)) 0.00001))
+  (let ((fguess (f guess)))
+   (if (close-enough? fguess guess)
+	guess
+	(find-fix-point fguess))))
+ (find-fix-point 1.0))
+
+(display (fix-point cos))
+(newline)
+(display (fix-point (lambda (x) (+ (sin x) (cos x)))))
+(newline)
+; exercise 1.35
+(display (fix-point (lambda (x) (+ 1 (/ 1 x)))))
+(newline)
+
+(define (ssqrt x)
+ (fix-point (lambda (y) (average y (/ x y)))))
+
+(display (ssqrt 87))
+(newline)
+
+; exercise 1.36
+(define (fixed-point f first-guess)
+ (define (find-fixed-point step guess)
+  (define (close-enough? a b) (< (abs (- a b)) 0.0001))
+  (define (show-verbos-msg)
+   (display step)
+   (display " : ")
+   (display guess)
+   (newline))
+  (show-verbos-msg)
+  (let ((fguess (f guess)))
+   (if (close-enough? fguess guess)
+	guess
+	(find-fixed-point (+ step 1) fguess))))
+ (display "--------------------start---------------------")
+ (newline)
+ (find-fixed-point 1 first-guess))
+
+(fixed-point (lambda (x) (/ (log 1000) (log x))) 2.0)
+
+(fixed-point (lambda (x) (/ (+ x (/ (log 1000) (log x))) 2)) 2.0)
+
+; exercise 1.37
+; This recusive process will lead to stack overflow
+(define (cont-frac n d k)
+ (define (iter i)
+  (if (= i k)
+   (/ (n i) (d i))
+   (/ (n i) (+ (d i) (iter (+ i 1))))))
+ (iter 1))
+
+; The iterative version
+
+(display (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 100))
+(newline)
+
