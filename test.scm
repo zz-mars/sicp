@@ -622,6 +622,7 @@
 
 ; exercise 1.37
 ; This recusive process will lead to stack overflow
+; Top-Down approach
 (define (cont-frac n d k)
  (define (iter i)
   (if (= i k)
@@ -630,7 +631,45 @@
  (iter 1))
 
 ; The iterative version
+; Buttom-Up approach
+(define (cont-frac-iterative n d k)
+ (define (iter i r)
+  (cond ((= i 0) r)
+   ((= i k) (iter (- i 1) (/ (n k) (d k))))
+   (else (iter (- i 1) (/ (n i) (+ (d i) r))))))
+ (iter k 0))
 
-(display (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 100))
+; iterative version, no stack overflow will happen.
+(display (cont-frac-iterative (lambda (i) 1.0) (lambda (i) 1.0) 4000))
+(newline)
+
+(display (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 400))
+(newline)
+
+(define (n i) 1.0)
+(define (d i) 
+ (if (= (remainder i 3) 2)
+  (/ (* 2 (+ i 1)) 3) 1))
+; exercise 1.38
+(display (+ (cont-frac-iterative n d 2000) 2))
+(newline)
+(display (+ (cont-frac n d 200) 2))
+(newline)
+; stack overflow
+;(display (+ (cont-frac n d 2000) 2))
+;(newline)
+
+(define (tan-cf x k)
+ (define (n i) 
+  (if (= i 1) x (- (square x))))
+ (define (d i) (- (* 2 i) 1))
+ (cont-frac-iterative n d k))
+
+(display (tan (/ 3.14 4)))
+(newline)
+
+(display "----------------")
+(newline)
+(display (tan-cf (/ 3.14 4) 10))
 (newline)
 
