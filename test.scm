@@ -607,13 +607,13 @@
    (display " : ")
    (display guess)
    (newline))
-  (show-verbos-msg)
+;  (show-verbos-msg)
   (let ((fguess (f guess)))
    (if (close-enough? fguess guess)
 	guess
 	(find-fixed-point (+ step 1) fguess))))
- (display "--------------------start---------------------")
- (newline)
+; (display "--------------------start---------------------")
+; (newline)
  (find-fixed-point 1 first-guess))
 
 (fixed-point (lambda (x) (/ (log 1000) (log x))) 2.0)
@@ -672,4 +672,114 @@
 (newline)
 (display (tan-cf (/ 3.14 4) 10))
 (newline)
+
+(define (average-damp f)
+ (lambda (x) (/ (+ x (f x)) 2)))
+
+(define (ssqrt x)
+ (fixed-point (average-damp (lambda (y) (/ x y))) 1.0))
+
+(display (ssqrt 89))
+(newline)
+
+; procedure as returned value
+; For a differentiable function x --> g(x)
+; Solution of equation g(x) = 0 is the fixed point of f(x)
+; where f(x) = x - g(x)/Dg(x)
+; And Dg(x) is the derivative of g(x)
+(define (derivative g)
+ (let ((dx 0.00001))
+  (lambda (x) (/ (- (g (+ x dx)) (g x)) dx))))
+
+(display ((derivative cube) 5))
+(newline)
+
+(define (newton-transform g)
+ (lambda (x)
+  (- x (/ (g x) ((derivative g) x)))))
+
+(define (newton-method g first-guess)
+ (fixed-point (average-damp (newton-transform g)) first-guess))
+
+(define (sssqrt x)
+ (newton-method (lambda (y) (- (square y) x)) 1.0))
+
+(display (sssqrt 89))
+(newline)
+
+; exercise 1.41
+(define (double f)
+ (lambda (x) 
+  (f (f x))))
+
+(display ((double inc) 5))
+(newline)
+
+(display (((double (double double)) inc) 5))
+(newline)
+
+; exercise 1.42
+(display (((lambda (f g) (lambda (x) (f (g x)))) square inc) 6))
+(newline)
+
+; exercise 1.43
+(define (compose f g)
+ (lambda (x) (f (g x))))
+
+(define (repeated f n)
+ (define (iter i r)
+  (if (= i n)
+   r
+   (iter (+ i 1) (compose f r))))
+ (iter 1 f))
+
+(display ((repeated square 2) 5))
+(newline)
+
+; exercise 1.44
+(define (smooth-func f)
+ (let ((dx 0.00001))
+  (lambda (x) (/ (+ (f (- x dx)) (f x) (f (+ x dx))) 3))))
+
+(define (n-smooth-func f n)
+ (repeated smooth-func n))
+
+(define (even? i) (= (remainder i 2) 0))
+
+(define (my-exp x n)
+ (define (iter base i r)
+  (cond ((= i 0) r)
+   ((even? i) (iter (square base) (/ i 2) r))
+   (else (iter base (- i 1) (* r base)))))
+ (iter x n 1))
+
+(display (my-exp 2 13))
+(newline)
+
+; exercise 1.45
+(define (lg n)
+ (define (iter i r)
+  (let ((next (/ i 2)))
+   (if (< next 1) r
+	(iter next (+ r 1)))))
+  (iter n 0))
+
+(define (nth-root x n)
+ (define (to-find-fixed-point y)
+  (/ x (my-exp y (- n 1))))
+ (fixed-point ((repeated average-damp (lg n)) to-find-fixed-point) 1.0))
+
+(display (nth-root 28 16))
+(newline)
+(display (nth-root 66 16))
+(newline)
+
+;exercise 1.46
+(define (iterative-improvement good-enough? improve-guess)
+ (lambda (first-guess)
+  (define (iter guess) 
+   (if (good-enough? guess)
+	guess
+	(iter (improve-guess guess))))
+  (iter first-guess)))
 
