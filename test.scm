@@ -6,6 +6,24 @@
 (define (gcd a b)
  (if (= b 0) a (gcd b (remainder a b))))
 
+;(define (cons x y)
+; (lambda (nr)
+;  (cond ((= nr 0) x)
+;   ((= nr 1) y)
+;   (else (display "invalid dispatch argument!")
+;	(newline)))))
+;
+;(define (car x) (x 0))
+;(define (cdr x) (x 1))
+;
+;; exercise 2.4
+;(define (cons x y)
+; (lambda (m) (m x y)))
+;(define (car z)
+; (z (lambda (x y) x)))
+;(define (cdr z)
+; (z (lambda (x y) y)))
+
 ;(display (gcd 12 16))
 ;(newline)
 
@@ -99,7 +117,33 @@
    (square (- (y-point (start-segment seg)) (y-point (end-segment seg)))))))
 
 ; check if two segments are orthogonal
-; (define (segments-orthogonal? seg1 seg2))
+(define (segments-orthogonal? seg1 seg2)
+ (let ((s1 (start-segment seg1))
+	   (e1 (end-segment seg1))
+	   (s2 (start-segment seg2))
+	   (e2 (end-segment seg2)))
+  (= (+ (* (- (x-point e1) (x-point s1)) (- (x-point e2) (x-point s2)))
+	  (* (- (y-point e1) (y-point s1)) (- (y-point e2) (y-point s2)))) 0)))
+
+(define A (make-point 1 4))
+(define B (make-point 2 1))
+(define C (make-point 5 2))
+(define D (make-point 1 1))
+
+(define seg1 (make-segment B A))
+(define seg2 (make-segment B C))
+(define seg3 (make-segment D A))
+(define seg4 (make-segment D C))
+
+; test segments-orthogonal? 
+(if (segments-orthogonal? seg1 seg2)
+ (display "1 2 orthogonal")
+ (display "1 2 not orthogonal"))
+(newline)
+(if (segments-orthogonal? seg3 seg4)
+ (display "3 4 orthogonal")
+ (display "3 4 not orthogonal"))
+(newline)
 
 (define (mid-point-segment seg)
  (make-point 
@@ -108,7 +152,12 @@
 
 ; exercise 2.3
 ; Assume seg1 and seg2 are orthogonal
-(define (make-rectangle seg1 seg2) (cons seg1 seg2))
+(define (make-rectangle seg1 seg2) 
+ (cond ((segments-orthogonal? seg1 seg2) (cons seg1 seg2))
+  (else 
+   (display "segment not orthogonal!")
+   (newline))))
+
 (define (rec-perimeter rec)
  (let ((seg1 (car rec))
 	   (seg2 (cdr rec)))
@@ -118,4 +167,129 @@
  (let ((seg1 (car rec))
 	   (seg2 (cdr rec)))
   (* (segment-len seg1) (segment-len seg2))))
+
+(define rec1 (make-rectangle seg1 seg2))
+
+(display (rec-perimeter rec1))
+(newline)
+(display (rec-area rec1))
+(newline)
+
+(define (even? x) (= (remainder x 2) 0))
+(define (my-exp x n)
+ (define (iter base i r)
+  (cond ((= i 0) r)
+   ((even? i) (iter (square base) (/ i 2) r))
+   (else (iter base (- i 1) (* r base)))))
+ (iter x n 1))
+;(display (my-exp 2 13))
+;(newline)
+
+; exercise 2.5
+;(define (cons a b)
+; (let ((repr (* (my-exp 2 a) (my-exp 3 b))))
+;  (lambda (f) (f repr))))
+;
+;(define (cad z k)
+; (z (lambda (x)
+;	 (define (iter y r)
+;	  (if (= (remainder y k) 0)
+;	   (iter (/ y k) (+ r 1))
+;	   r))
+;	 (iter x 0))))
+;
+;(define (car z) (cad z 2))
+;(define (cdr z) (cad z 3))
+;
+;(define z (cons 4 3))
+;(display (car z))
+;(newline)
+;(display (cdr z))
+;(newline)
+	
+; exercise 2.6
+(define zero (lambda (f) (lambda (x) x)))
+
+(define (add-1 n)
+ (lambda (f) (lambda (x) (f ((n f) x)))))
+
+; (add-1 zero) 
+(define one
+ (lambda (f) (lambda (x) (f x))))
+; (add-1 one)
+(define two
+ (lambda (f) (lambda (x) (f (f x)))))
+; (add-1 two)
+(define three
+ (lambda (f) (lambda (x) (f (f (f x))))))
+
+(define (+ a b) 
+ (lambda (f) (lambda (x) ((b f) ((a f) x)))))
+
+; sequences
+(define l (list 1 2 3 4 5))
+(display (car l))
+(newline)
+(display (cdr l))
+(newline)
+
+(define (list-ref items n)
+ (if (= n 0)
+  (car items)
+  (list-ref (cdr items) (- n 1))))
+
+(display (list-ref l 3))
+(newline)
+
+(define nil (cdr (list 1)))
+
+(define (list-reverse lst)
+ (define (iter origin res)
+  (if (null? origin)
+   res
+   (iter (cdr origin) (cons (car origin) res))))
+ (iter lst nil))
+
+(display (list-reverse l))
+(newline)
+
+(define (my-map lst f)
+ (let ((nil (cdr (list 1))))
+  (define (iter origin res)
+   (if (null? origin) res
+	(iter (cdr origin) (cons (f (car origin)) res))))
+  (list-reverse (iter lst nil))))
+
+(define l2 (my-map l (lambda (x) (square x))))
+
+(define (append list1 list2)
+ (if (null? list1)
+  list2
+  (cons (car list1) (append (cdr list1) list2))))
+
+(display (append l l2))
+(newline)
+
+; exercise 2.17
+(define (last-pair lst)
+ (if (null? (cdr lst))
+  lst
+  (last-pair (cdr lst))))
+
+(display (last-pair l2))
+(newline)
+
+; exercise 2.20
+(define (same-parity first-arg . l)
+ (define (iter origin-lst res-lst)
+  (define (my-filter elem)
+   (= (remainder first-arg 2) (remainder elem 2)))
+  (cond ((null? origin-lst) res-lst)
+   ((my-filter (car origin-lst))
+	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
+   (else (iter (cdr origin-lst) res-lst))))
+ (cons first-arg (list-reverse (iter l nil))))
+
+(display (same-parity 1 2 3 4 5 6 7 8 9 ))
+(newline)
 
