@@ -280,16 +280,46 @@
 (newline)
 
 ; exercise 2.20
-(define (same-parity first-arg . l)
+; The filter
+;(define (my-filter lst f)
+; (define (iter origin-lst res-lst)
+;  (if (null? origin-lst) res-lst
+;   (let ((to-test (car origin-lst))
+;		 (lst-left (cdr origin-lst)))
+;	if (f to-test) (iter lst-left (cons to-test res-lst))
+;	(iter lst-left res-lst))))
+; (list-reverse (iter lst nil)))
+
+(define (my-filter lst f)
  (define (iter origin-lst res-lst)
-  (define (my-filter elem)
-   (= (remainder first-arg 2) (remainder elem 2)))
   (cond ((null? origin-lst) res-lst)
-   ((my-filter (car origin-lst))
+   ((f (car origin-lst))
 	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
    (else (iter (cdr origin-lst) res-lst))))
- (cons first-arg (list-reverse (iter l nil))))
+ (list-reverse (iter lst nil)))
 
+(define l (list 1 2 3 4 5 6 7 8 9))
+(display (my-filter l (lambda (x) (= (remainder x 2) 0))))
+(newline)
+
+;(define (same-parity first-arg . l)
+; (define (iter origin-lst res-lst)
+;  (define (my-filter elem)
+;   (= (remainder first-arg 2) (remainder elem 2)))
+;  (cond ((null? origin-lst) res-lst)
+;   ((my-filter (car origin-lst))
+;	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
+;   (else (iter (cdr origin-lst) res-lst))))
+; (cons first-arg (list-reverse (iter l nil))))
+
+(define (same-parity first-arg . l)
+ (let ((first-remainder (remainder first-arg 2)))
+  (cons first-arg 
+   (my-filter l 
+	(lambda (x) (= first-remainder (remainder x 2)))))))
+
+(display "-------filter============")
+(newline)
 (display (same-parity 1 2 3 4 5 6 7 8 9 ))
 (newline)
 
