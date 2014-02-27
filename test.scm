@@ -253,14 +253,14 @@
 (display (list-reverse l))
 (newline)
 
-(define (my-map lst f)
+(define (list-map lst f)
  (let ((nil (cdr (list 1))))
   (define (iter origin res)
    (if (null? origin) res
 	(iter (cdr origin) (cons (f (car origin)) res))))
   (list-reverse (iter lst nil))))
 
-(define l2 (my-map l (lambda (x) (square x))))
+(define l2 (list-map l (lambda (x) (square x))))
 
 (define (append list1 list2)
  (if (null? list1)
@@ -280,46 +280,95 @@
 (newline)
 
 ; exercise 2.20
-; The filter
-;(define (my-filter lst f)
+; an implementation of filter
+;(define (list-filter lst f)
 ; (define (iter origin-lst res-lst)
-;  (if (null? origin-lst) res-lst
-;   (let ((to-test (car origin-lst))
-;		 (lst-left (cdr origin-lst)))
-;	if (f to-test) (iter lst-left (cons to-test res-lst))
-;	(iter lst-left res-lst))))
+;  (cond ((null? origin-lst) res-lst)
+;   ((f (car origin-lst))
+;	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
+;   (else (iter (cdr origin-lst) res-lst))))
 ; (list-reverse (iter lst nil)))
 
-(define (my-filter lst f)
+; another filter implementation
+(define (list-filter lst f)
  (define (iter origin-lst res-lst)
-  (cond ((null? origin-lst) res-lst)
-   ((f (car origin-lst))
-	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
-   (else (iter (cdr origin-lst) res-lst))))
+  (if (null? origin-lst) res-lst
+   (let ((to-test (car origin-lst))
+		 (lst-left (cdr origin-lst)))
+	(if (f to-test) (iter lst-left (cons to-test res-lst))
+	 (iter lst-left res-lst)))))
  (list-reverse (iter lst nil)))
 
 (define l (list 1 2 3 4 5 6 7 8 9))
-(display (my-filter l (lambda (x) (= (remainder x 2) 0))))
+(display "==============filter test=============")
 (newline)
-
-;(define (same-parity first-arg . l)
-; (define (iter origin-lst res-lst)
-;  (define (my-filter elem)
-;   (= (remainder first-arg 2) (remainder elem 2)))
-;  (cond ((null? origin-lst) res-lst)
-;   ((my-filter (car origin-lst))
-;	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
-;   (else (iter (cdr origin-lst) res-lst))))
-; (cons first-arg (list-reverse (iter l nil))))
+(display (list-filter l (lambda (x) (= (remainder x 2) 0))))
+(newline)
 
 (define (same-parity first-arg . l)
  (let ((first-remainder (remainder first-arg 2)))
   (cons first-arg 
-   (my-filter l 
+   (list-filter l 
 	(lambda (x) (= first-remainder (remainder x 2)))))))
 
-(display "-------filter============")
+(display "============filter============")
 (newline)
 (display (same-parity 1 2 3 4 5 6 7 8 9 ))
+(newline)
+
+; exercise 2.21
+; 1st implementation of square-list
+(define (square-list lst)
+ (if (null? lst)
+  nil
+  (cons (square (car lst)) (square-list (cdr lst)))))
+
+(display (square-list l))
+(newline)
+
+(define (square-list lst) (map square lst))
+(display (square-list l))
+(newline)
+
+; exercise 2.22 pass
+; exercise 2.23
+(define (list-for-each f lst)
+ (cond ((not (null? lst))
+		(f (car lst))
+		(list-for-each f (cdr lst)))))
+(list-for-each (lambda (x) (newline) (display x)) (list 57 321 88))
+(newline)
+
+(display "=======================================")
+(newline)
+
+;(define (list-length lst)
+; (define (iter llst r)
+;  (if (null? llst) r
+;   (iter (cdr llst) (+ r 1))))
+; (iter lst 0))
+;
+;(define x (cons (list 1 2) (list 3 4)))
+;(define l (list 1 2 3 4 5 6 7 8 9))
+;
+;(display "===========list-length test===========")
+;(newline)
+;(display (list-length x))
+;(newline)
+;(display (list-length l))
+;(newline)
+
+;(display (count-leaves x))
+;(newline)
+
+(define (length lst)
+ (define (iter llst r)
+  (if (null? llst) r
+   (iter (cdr llst) (+ r 1))))
+ (iter lst 0))
+
+(define l (list 1 2 3 4 5 6 7 8 9))
+
+(display (length l))
 (newline)
 
