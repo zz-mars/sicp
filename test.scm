@@ -176,8 +176,8 @@
  (let ((left-br (left-branch mobile))
 	   (right-br (right-branch mobile)))
   (and (= (branch-torque left-br) (branch-torque right-br))
-   (if (pair? left-br) (mobile-balanced left-br))
-   (if (pair? right-br) (mobile-balanced right-br)))))
+   (if (pair? (branch-structure left-br)) (mobile-balanced (branch-structure left-br)))
+   (if (pair? (branch-structure right-br)) (mobile-balanced (branch-structure right-br))))))
 
 (define b1 (make-branch 10 20))
 (define b2 (make-branch 10 20))
