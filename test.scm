@@ -1,367 +1,5 @@
-; chapter two : data abstraction
-(define (>= a b) (not (< a b)))
-(define (<= a b) (not (> a b)))
-(define (average x y) (/ (+ a b) 2.0))
-
-(define (gcd a b)
- (if (= b 0) a (gcd b (remainder a b))))
-
-;(define (cons x y)
-; (lambda (nr)
-;  (cond ((= nr 0) x)
-;   ((= nr 1) y)
-;   (else (display "invalid dispatch argument!")
-;	(newline)))))
-;
-;(define (car x) (x 0))
-;(define (cdr x) (x 1))
-;
-;; exercise 2.4
-;(define (cons x y)
-; (lambda (m) (m x y)))
-;(define (car z)
-; (z (lambda (x y) x)))
-;(define (cdr z)
-; (z (lambda (x y) y)))
-
-;(display (gcd 12 16))
-;(newline)
-
-;(define (make-rat n d)
-; (cond ((= d 0) 
-;		(display "denominator cannot be zero!")
-;		(newline)
-;		(cons 1 0))
-;  (else (let ((the-gcd (gcd n d)))
-;		 (cons (/ n the-gcd) (/ d the-gcd))))))
-
-; better version of make-rat
-(define (make-rat n d)
- (cond ((= d 0) 
-		(display "denominator cannot be zero!")
-		(newline)
-		(cons 1 0))
-  (else (let ((the-gcd (gcd n d)))
-		 (let ((a (/ n the-gcd))
-			   (b (/ d the-gcd)))
-		  (cond ((< b 0) (cons (- a) (- b)))
-		   (else (cons a b))))))))
-
-(define (numer x) (car x))
-(define (denom x) (cdr x))
-
-(define (print-rat x)
- (display (numer x))
- (display "/")
- (display (denom x))
- (newline))
-
-;(print-rat (make-rat 12 16))
-
-;(let ((x (make-rat 12 16)))
-; (display (numer x))
-; (newline)
-; (display (denom x))
-; (newline))
-
-(define (add-rat a b)
- (let ((na (numer a))
-	   (da (denom a))
-	   (nb (numer b))
-	   (db (denom b)))
-  (make-rat 
-   (+ (* na db) (* nb da))
-   (* da db))))
-
-(print-rat (add-rat (make-rat 1 3) (make-rat 1 3)))
-
-(define (sub-rat a b)
- (add-rat a (make-rat (numer b) (- (denom b)))))
-
-(print-rat (sub-rat (make-rat 1 3) (make-rat 1 3)))
-(print-rat (sub-rat (make-rat 1 2) (make-rat 1 3)))
-
-(define (mul-rat a b)
- (make-rat (* (numer a) (numer b)) (* (denom a) (denom b))))
-
-(print-rat (mul-rat (make-rat 4 6) (make-rat 1 2)))
-
-(define (div-rat a b)
- (make-rat (* (numer a) (denom b)) (* (numer b) (denom a))))
-
-(define (equal-rat? a b)
- (= (* (numer a) (denom b)) (* (numer b) (denom a))))
-
-; reciprocal of x
-(define (rec-rat x)
- (make-rat (denom x) (numer x)))
-
-(print-rat (rec-rat (make-rat 0 1)))
-
-(print-rat (rec-rat (make-rat 2 (- 6))))
-
-(define (square x) (* x x))
-
-;exercise 2.2
-(define (make-segment p1 p2) (cons p1 p2))
-(define (start-segment seg) (car seg))
-(define (end-segment seg) (cdr seg))
-
-(define (make-point x y) (cons x y))
-(define (x-point p) (car p))
-(define (y-point p) (cdr p))
-
-(define (segment-len seg)
- (sqrt 
-  (+ (square (- (x-point (start-segment seg)) (x-point (end-segment seg))))
-   (square (- (y-point (start-segment seg)) (y-point (end-segment seg)))))))
-
-; check if two segments are orthogonal
-(define (segments-orthogonal? seg1 seg2)
- (let ((s1 (start-segment seg1))
-	   (e1 (end-segment seg1))
-	   (s2 (start-segment seg2))
-	   (e2 (end-segment seg2)))
-  (= (+ (* (- (x-point e1) (x-point s1)) (- (x-point e2) (x-point s2)))
-	  (* (- (y-point e1) (y-point s1)) (- (y-point e2) (y-point s2)))) 0)))
-
-(define A (make-point 1 4))
-(define B (make-point 2 1))
-(define C (make-point 5 2))
-(define D (make-point 1 1))
-
-(define seg1 (make-segment B A))
-(define seg2 (make-segment B C))
-(define seg3 (make-segment D A))
-(define seg4 (make-segment D C))
-
-; test segments-orthogonal? 
-(if (segments-orthogonal? seg1 seg2)
- (display "1 2 orthogonal")
- (display "1 2 not orthogonal"))
-(newline)
-(if (segments-orthogonal? seg3 seg4)
- (display "3 4 orthogonal")
- (display "3 4 not orthogonal"))
-(newline)
-
-(define (mid-point-segment seg)
- (make-point 
-  (average (x-point (start-segment seg)) (x-point (end-segment seg)))
-  (average (y-point (start-segment seg)) (y-point (end-segment seg)))))
-
-; exercise 2.3
-; Assume seg1 and seg2 are orthogonal
-(define (make-rectangle seg1 seg2) 
- (cond ((segments-orthogonal? seg1 seg2) (cons seg1 seg2))
-  (else 
-   (display "segment not orthogonal!")
-   (newline))))
-
-(define (rec-perimeter rec)
- (let ((seg1 (car rec))
-	   (seg2 (cdr rec)))
-  (* 2 (+ (segment-len seg1) (segment-len seg2)))))
-
-(define (rec-area rec)
- (let ((seg1 (car rec))
-	   (seg2 (cdr rec)))
-  (* (segment-len seg1) (segment-len seg2))))
-
-(define rec1 (make-rectangle seg1 seg2))
-
-(display (rec-perimeter rec1))
-(newline)
-(display (rec-area rec1))
-(newline)
-
-(define (even? x) (= (remainder x 2) 0))
-(define (my-exp x n)
- (define (iter base i r)
-  (cond ((= i 0) r)
-   ((even? i) (iter (square base) (/ i 2) r))
-   (else (iter base (- i 1) (* r base)))))
- (iter x n 1))
-;(display (my-exp 2 13))
-;(newline)
-
-; exercise 2.5
-;(define (cons a b)
-; (let ((repr (* (my-exp 2 a) (my-exp 3 b))))
-;  (lambda (f) (f repr))))
-;
-;(define (cad z k)
-; (z (lambda (x)
-;	 (define (iter y r)
-;	  (if (= (remainder y k) 0)
-;	   (iter (/ y k) (+ r 1))
-;	   r))
-;	 (iter x 0))))
-;
-;(define (car z) (cad z 2))
-;(define (cdr z) (cad z 3))
-;
-;(define z (cons 4 3))
-;(display (car z))
-;(newline)
-;(display (cdr z))
-;(newline)
-	
-; exercise 2.6
-(define zero (lambda (f) (lambda (x) x)))
-
-(define (add-1 n)
- (lambda (f) (lambda (x) (f ((n f) x)))))
-
-; (add-1 zero) 
-(define one
- (lambda (f) (lambda (x) (f x))))
-; (add-1 one)
-(define two
- (lambda (f) (lambda (x) (f (f x)))))
-; (add-1 two)
-(define three
- (lambda (f) (lambda (x) (f (f (f x))))))
-
-(define (+ a b) 
- (lambda (f) (lambda (x) ((b f) ((a f) x)))))
-
-; sequences
-(define l (list 1 2 3 4 5))
-(display (car l))
-(newline)
-(display (cdr l))
-(newline)
-
-(define (list-ref items n)
- (if (= n 0)
-  (car items)
-  (list-ref (cdr items) (- n 1))))
-
-(display (list-ref l 3))
-(newline)
-
-(define nil (cdr (list 1)))
-
-(define (list-reverse lst)
- (define (iter origin res)
-  (if (null? origin)
-   res
-   (iter (cdr origin) (cons (car origin) res))))
- (iter lst nil))
-
-(display (list-reverse l))
-(newline)
-
-(define (list-map lst f)
- (let ((nil (cdr (list 1))))
-  (define (iter origin res)
-   (if (null? origin) res
-	(iter (cdr origin) (cons (f (car origin)) res))))
-  (list-reverse (iter lst nil))))
-
-(define l2 (list-map l (lambda (x) (square x))))
-
-(define (append list1 list2)
- (if (null? list1)
-  list2
-  (cons (car list1) (append (cdr list1) list2))))
-
-(display (append l l2))
-(newline)
-
-; exercise 2.17
-(define (last-pair lst)
- (if (null? (cdr lst))
-  lst
-  (last-pair (cdr lst))))
-
-(display (last-pair l2))
-(newline)
-
-; exercise 2.20
-; an implementation of filter
-;(define (list-filter lst f)
-; (define (iter origin-lst res-lst)
-;  (cond ((null? origin-lst) res-lst)
-;   ((f (car origin-lst))
-;	(iter (cdr origin-lst) (cons (car origin-lst) res-lst)))
-;   (else (iter (cdr origin-lst) res-lst))))
-; (list-reverse (iter lst nil)))
-
-; another filter implementation
-(define (list-filter lst f)
- (define (iter origin-lst res-lst)
-  (if (null? origin-lst) res-lst
-   (let ((to-test (car origin-lst))
-		 (lst-left (cdr origin-lst)))
-	(if (f to-test) (iter lst-left (cons to-test res-lst))
-	 (iter lst-left res-lst)))))
- (list-reverse (iter lst nil)))
-
-(define l (list 1 2 3 4 5 6 7 8 9))
-(display "==============filter test=============")
-(newline)
-(display (list-filter l (lambda (x) (= (remainder x 2) 0))))
-(newline)
-
-(define (same-parity first-arg . l)
- (let ((first-remainder (remainder first-arg 2)))
-  (cons first-arg 
-   (list-filter l 
-	(lambda (x) (= first-remainder (remainder x 2)))))))
-
-(display "============filter============")
-(newline)
-(display (same-parity 1 2 3 4 5 6 7 8 9 ))
-(newline)
-
-; exercise 2.21
-; 1st implementation of square-list
-(define (square-list lst)
- (if (null? lst)
-  nil
-  (cons (square (car lst)) (square-list (cdr lst)))))
-
-(display (square-list l))
-(newline)
-
-(define (square-list lst) (map square lst))
-(display (square-list l))
-(newline)
-
-; exercise 2.22 pass
 ; exercise 2.23
-(define (list-for-each f lst)
- (cond ((not (null? lst))
-		(f (car lst))
-		(list-for-each f (cdr lst)))))
-(list-for-each (lambda (x) (newline) (display x)) (list 57 321 88))
-(newline)
-
-(display "=======================================")
-(newline)
-
-;(define (list-length lst)
-; (define (iter llst r)
-;  (if (null? llst) r
-;   (iter (cdr llst) (+ r 1))))
-; (iter lst 0))
-;
-;(define x (cons (list 1 2) (list 3 4)))
-;(define l (list 1 2 3 4 5 6 7 8 9))
-;
-;(display "===========list-length test===========")
-;(newline)
-;(display (list-length x))
-;(newline)
-;(display (list-length l))
-;(newline)
-
-;(display (count-leaves x))
-;(newline)
-
-(define (length lst)
+(define (list-length lst)
  (define (iter llst r)
   (if (null? llst) r
    (iter (cdr llst) (+ r 1))))
@@ -369,6 +7,204 @@
 
 (define l (list 1 2 3 4 5 6 7 8 9))
 
-(display (length l))
+(display (list-length l))
+(newline)
+
+(define x (cons (list 1 2) (list 3 4)))
+(display (list-length x))
+(newline)
+
+(define (count-leaves lst)
+ (cond ((null? lst) 0)
+  ((not (pair? lst)) 1)
+  (else (+ (count-leaves (car lst))
+		 (count-leaves (cdr lst))))))
+
+(display (count-leaves x))
+(newline)
+
+(define l (list 1 (list 2 (list 3 4))))
+(display l)
+(newline)
+
+(define l1 (list 1 3 (list 5 7) 9))
+(define l2 (list (list 7)))
+(define l3 (list 1 (list 2 (list 3 (list 4 (list 5 (list 6 7)))))))
+
+(display l1)
+(newline)
+(display l2)
+(newline)
+(display l3)
+(newline)
+
+(display "=====================")
+(newline)
+(display (car (cdaddr l1)))
+(newline)
+(display (caar l2))
+(newline)
+(display (cadadr (cadadr (cadadr l3))))
+(newline)
+(display (car (cdr (car (cdr (cdr l1))))))
+(newline)
+(display (car (car l2)))
+(newline)
+(display (car (cdr (car (cdr (car (cdr (car (cdr (car (cdr (car (cdr l3)))))))))))))
+(newline)
+
+(define nil (cdr (list 1)))
+; exercise 2.27
+(define (list-reverse lst)
+ (define (iter llst res)
+  (if (null? llst)
+   res
+   (iter (cdr llst) (cons (car llst) res))))
+ (iter lst nil))
+
+(define x (list (list 1 2) (list 3 4)))
+(display (list-reverse x))
+(newline)
+
+;(define (deep-list-reverse lst)
+; (display "now reverse list ====== ")
+; (display lst)
+; (newline)
+; (cond ((null? lst) ())
+;  ((not (pair? lst)) lst)
+;  (else (list-reverse 
+;		 (list 
+;		  (deep-list-reverse (car lst))
+;		  (deep-list-reverse (cadr lst)))))))
+
+;(define (deep-list-reverse lst)
+; (cond ((or (null? lst) (not (pair? lst))) lst)
+;  ((null? (cdr lst)) (deep-list-reverse (car lst)))
+;  (else (list-reverse (list (deep-list-reverse (car lst))
+;					   (deep-list-reverse (cdr lst)))))))
+
+;(define (deep-list-reverse lst)
+; (define (iter origin-lst res-lst)
+;  (cond ((null? origin-lst) res-lst)
+;   ((not (pair? origin-lst)) (cons origin-lst res-lst))
+;   (else (iter (cdr origin-lst) (append (deep-list-reverse (car lst)) res-lst)))))
+; (display "now reverse list ====== ")
+; (display lst)
+; (newline)
+; (iter lst nil))
+
+;(define (list-map lst f)
+; (define (iter origin-lst res-lst)
+;  (if (null? origin-lst) res-lst
+;   (iter (cdr origin-lst) (cons (f (car origin-lst)) res-lst))))
+; (list-reverse (iter lst '())))
+
+(define (list-map lst f)
+ (define (iter origin-lst res-lst)
+  (if (null? origin-lst) res-lst
+   (iter (cdr origin-lst) (append res-lst (list (f (car origin-lst)))))))
+ (iter lst '()))
+
+(display "list-map test ==========")
+(newline)
+(display (list-map (list 1 2 3 4) (lambda (x) (* x x))))
+(newline)
+
+; 1st deep-list-reverse implementation
+(define (deep-list-reverse lst)
+ (define (iter remained-items result)
+  (if (null? remained-items) result
+   (let ((to-reverse (car remained-items)))
+	(iter (cdr remained-items)
+	 (cons (if (pair? to-reverse) (deep-list-reverse to-reverse) to-reverse)
+	 result)))))
+ (iter lst nil))
+
+; 2nd deep-list-reverse implementation
+(define (deep-list-reverse lst)
+ (if (pair? lst)
+  (list-reverse (list-map lst deep-list-reverse))
+  lst))
+
+(display (deep-list-reverse x))
+(newline)
+
+(define x (list 1 2 (list 3 4) 5))
+(display x)
+(newline)
+(display (deep-list-reverse x))
+(newline)
+
+;exercise 2.28
+(define (fringe tree)
+ (define (iter remained-items result)
+  (cond ((null? remained-items) result)
+   (else (let ((to-test (car remained-items))
+			   (next-loop-items (cdr remained-items)))
+		  (iter next-loop-items
+		   (append result (if (pair? to-test) (fringe to-test) (list to-test))))))))
+ (iter tree nil))
+
+(display "========== fringe ===========")
+(define x (list (list 1 2 (list (list 0 9) 5 6)) (list 3 4)))
+(display x)
+(newline)
+(display (fringe x))
+(newline)
+
+; exercise 2.29
+(define (make-mobile left right) (list left right))
+(define (make-branch length structure) (list length structure))
+(define (left-branch mobile) (car mobile))
+(define (right-branch mobile) (cadr mobile))
+(define (branch-length branch) (car branch))
+(define (branch-structure branch) (cadr branch))
+
+(define (total-weight mobile)
+ (define (branch-weight br)
+  (let ((br-stru (branch-structure br)))
+   (if (pair? br-stru) (total-weight br-stru) br-stru)))
+ (+ (branch-weight (left-branch mobile))
+  (branch-weight (right-branch mobile))))
+
+(define (branch-torque br)
+ (let ((br-len (branch-length br))
+	   (br-stru (branch-structure br)))
+  (* br-len (if (pair? br-stru) (total-weight br-stru) br-stru))))
+
+(define (mobile-balanced mobile)
+ (let ((left-br (left-branch mobile))
+	   (right-br (right-branch mobile)))
+  (and (= (branch-torque left-br) (branch-torque right-br))
+   (if (pair? left-br) (mobile-balanced left-br))
+   (if (pair? right-br) (mobile-balanced right-br)))))
+
+(define b1 (make-branch 10 20))
+(define b2 (make-branch 10 20))
+(define m1 (make-mobile b1 b2))
+
+(define b3 (make-branch 10 20))
+(define b4 (make-branch 10 20))
+(define m2 (make-mobile b3 b4))
+
+(define b5 (make-branch 10 m1))
+(define b6 (make-branch 10 m2))
+
+(define m (make-mobile b5 b6))
+
+(display "total weight -->  ")
+(display (total-weight m))
+(newline)
+
+(display "left branch toque -->  ")
+(display (branch-torque (left-branch m)))
+(newline)
+(display "right branch toque -->  ")
+(display (branch-torque (right-branch m)))
+(newline)
+
+(if (mobile-balanced m)
+ (display "balanced")
+ (display "not balanced"))
 (newline)
 
