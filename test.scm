@@ -16,10 +16,23 @@
 
 (define (count-leaves lst)
  (cond ((null? lst) 0)
-  ((not (pair? lst)) 1)
-  (else (+ (count-leaves (car lst))
-		 (count-leaves (cdr lst))))))
+  ((pair? lst) 
+   (+ (count-leaves (car lst))
+	(count-leaves (cdr lst))))
+  (else 1)))
 
+; This implementation will still generate recursive processing
+;(define (count-leaves lst)
+; (define (iter items-left res)
+;   (if (null? items-left) res
+;	(let ((now-checking (car items-left))
+;		   (to-check (cdr items-left)))
+;	  (iter to-check (+ res 
+;		(if (pair? now-checking) (count-leaves now-checking) 1))))))
+; (iter lst 0))
+
+(display "-------- count-leaves test --------")
+(newline)
 (display (count-leaves x))
 (newline)
 
@@ -66,61 +79,68 @@
 (display (list-reverse x))
 (newline)
 
-;(define (deep-list-reverse lst)
-; (display "now reverse list ====== ")
-; (display lst)
-; (newline)
-; (cond ((null? lst) ())
-;  ((not (pair? lst)) lst)
-;  (else (list-reverse 
-;		 (list 
-;		  (deep-list-reverse (car lst))
-;		  (deep-list-reverse (cadr lst)))))))
-
-;(define (deep-list-reverse lst)
-; (cond ((or (null? lst) (not (pair? lst))) lst)
-;  ((null? (cdr lst)) (deep-list-reverse (car lst)))
-;  (else (list-reverse (list (deep-list-reverse (car lst))
-;					   (deep-list-reverse (cdr lst)))))))
-
-;(define (deep-list-reverse lst)
-; (define (iter origin-lst res-lst)
-;  (cond ((null? origin-lst) res-lst)
-;   ((not (pair? origin-lst)) (cons origin-lst res-lst))
-;   (else (iter (cdr origin-lst) (append (deep-list-reverse (car lst)) res-lst)))))
-; (display "now reverse list ====== ")
-; (display lst)
-; (newline)
-; (iter lst nil))
-
-;(define (list-map lst f)
-; (define (iter origin-lst res-lst)
-;  (if (null? origin-lst) res-lst
-;   (iter (cdr origin-lst) (cons (f (car origin-lst)) res-lst))))
-; (list-reverse (iter lst '())))
-
+; iterative implementation with append
 (define (list-map lst f)
  (define (iter origin-lst res-lst)
   (if (null? origin-lst) res-lst
    (iter (cdr origin-lst) (append res-lst (list (f (car origin-lst)))))))
  (iter lst '()))
 
+; iterative implementation with cons & list-reverse
+(define (list-map lst f)
+ (define (iter origin-lst res-lst)
+  (if (null? origin-lst) res-lst
+   (iter (cdr origin-lst) (cons (f (car origin-lst)) res-lst))))
+ (list-reverse (iter lst nil)))
+
+; recursive implementation of list-map
+(define (list-map lst f)
+ (if (null? lst) nil
+  (cons (f (car lst)) (list-map (cdr lst) f))))
+
 (display "list-map test ==========")
 (newline)
 (display (list-map (list 1 2 3 4) (lambda (x) (* x x))))
 (newline)
 
+; map of tree
+; recursive implementation of deep-list-map
+(define (deep-list-map lst f)
+ (define (iter origin-lst res-lst)
+  (if (null? origin-lst) res-lst
+   (let ((ca (car origin-lst))
+		 (cd (cdr origin-lst)))
+	(iter cd (cons 
+			  (if (pair? ca) (deep-list-map ca f) (f ca)) res-lst)))))
+ (list-reverse (iter lst nil)))
+; recursive implementation of deep-list-map with cons
+(define (deep-list-map lst f)
+ (cond ((null? lst) nil)
+  ((pair? lst)
+   (cons (deep-list-map (car lst) f) (deep-list-map (cdr lst) f)))
+  (else (f lst))))
+
+(define x (list (list 1 (list 5 6 (list 8 9) 7)  2) (list 3 4)))
+(display "deep-list-map test ==========")
+(newline)
+(display (deep-list-map x (lambda (x) (* x x))))
+(newline)
+
 ; 1st deep-list-reverse implementation
-(define (deep-list-reverse lst)
- (define (iter remained-items result)
-  (if (null? remained-items) result
-   (let ((to-reverse (car remained-items)))
-	(iter (cdr remained-items)
-	 (cons (if (pair? to-reverse) (deep-list-reverse to-reverse) to-reverse)
-	 result)))))
- (iter lst nil))
+;(define (deep-list-reverse lst)
+; (define (iter remained-items result)
+;  (if (null? remained-items) result
+;   (let ((to-reverse (car remained-items)))
+;	(iter (cdr remained-items)
+;	 (cons (if (pair? to-reverse) (deep-list-reverse to-reverse) to-reverse)
+;	 result)))))
+; (iter lst nil))
 
 ; 2nd deep-list-reverse implementation
+;(define (deep-list-reverse lst) 
+; (deep-list-map lst (lambda (x) x)))
+
+; 3rd deep-list-reverse implementation
 (define (deep-list-reverse lst)
  (if (pair? lst)
   (list-reverse (list-map lst deep-list-reverse))
@@ -220,3 +240,6 @@
  (display "not balanced"))
 (newline)
 
+; tree map
+; apply f to all the leaves of the tree
+; return a tree of the same shape
