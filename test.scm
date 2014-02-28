@@ -137,10 +137,6 @@
 ; (iter lst nil))
 
 ; 2nd deep-list-reverse implementation
-;(define (deep-list-reverse lst) 
-; (deep-list-map lst (lambda (x) x)))
-
-; 3rd deep-list-reverse implementation
 (define (deep-list-reverse lst)
  (if (pair? lst)
   (list-reverse (list-map lst deep-list-reverse))
@@ -240,6 +236,105 @@
  (display "not balanced"))
 (newline)
 
-; tree map
-; apply f to all the leaves of the tree
-; return a tree of the same shape
+; exercise 2.32
+; My own implementation of (subsets s) 
+; return the set of all the subset of set s
+;(define (subsets s)
+; ; The set ss after all its elements are appended by elem
+; ; the new appended set is returned
+; (define (helper elem ss)
+;  (define (iter items res)
+;   (if (null? items) res
+;	(iter (cdr items) (append res (list (append (car items) (list elem)))))))
+;  (iter ss nil))
+; (if (null? s) (list nil)
+;  (let ((sscds (subsets (cdr s))))
+;   (append sscds (helper (car s) sscds)))))
+
+; from sicp
+; just perfect!
+(define (subsets s)
+ (if (null? s) (list nil)
+  (let ((sscds (subsets (cdr s)))
+		(sca (car s)))
+   (append sscds (list-map sscds 
+				  (lambda (x) (append x (list sca))))))))
+
+(display "======== subsets test ========")
+(newline)
+(display (subsets (list 1 2 3)))
+(newline)
+
+(define (list-filter lst f)
+ (if (null? lst) nil
+  (let ((ca (car lst))
+		(cd (cdr lst)))
+   (if (f ca)
+	(cons ca (list-filter cd f))
+	(list-filter cd f)))))
+
+(display "======== list-filter ========")
+(newline)
+(display (list-filter (list 1 2 3 4 5 6)
+		  (lambda (x) (= (remainder x 2) 0))))
+(newline)
+
+(define (list-accumulator lst f init-value)
+ (define (iter L res)
+  (if (null? L) res
+   (iter (cdr L) (f (car L) res))))
+ (iter lst init-value))
+
+(display "======== list-accumulator ========")
+(newline)
+(display (list-accumulator (list 1 2 3 4 5 6) + 0))
+(newline)
+
+
+(define (enumerate-interval low high)
+ (define (iter llow res)
+  (if (> llow high) res
+   (iter (+ llow 1) (append res (list llow)))))
+ (iter low nil))
+
+(display "======== enumerate-interval ========")
+(newline)
+(display (enumerate-interval 2 7))
+(newline)
+
+(define (enumerate-tree tree)
+ (if (null? tree) nil
+  (append (if (pair? (car tree)) 
+		   (enumerate-tree (car tree)) (list (car tree)))
+   (enumerate-tree (cdr tree)))))
+
+(display "======== enumerate-tree ========")
+(newline)
+(display (enumerate-tree (list 1 (list 2 (list 3 (list 4 (list 5)))))))
+(newline)
+
+(define (sum-odd-square tree)
+ (list-accumulator (list-map (list-filter (enumerate-tree tree) odd?)
+					(lambda (x) (* x x))) + 0))
+
+(display "======== sum-odd-square ========")
+(newline)
+(display (sum-odd-square (list 1 (list 2 (list 3 (list 4 (list 5)))))))
+(newline)
+
+(define (fib n)
+ (define (iter a b i)
+  (if (= i n) a
+   (iter b (+ a b) (+ i 1))))
+ (iter 0 1 0))
+
+(define (even-fibs n)
+ (list-accumulator
+  (list-filter (list-map (enumerate-interval 0 n) fib) even?)
+  cons nil))
+
+(display "======== even-fibs ========")
+(newline)
+(display (even-fibs 20))
+(newline)
+
