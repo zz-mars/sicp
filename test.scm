@@ -126,7 +126,9 @@
   (list-reverse (list-map lst deep-list-reverse))
   lst))
 
-(display (deep-list-reverse x))
+(display "========= deep-list-reverse =========")
+(newline)
+(display (deep-list-reverse l3))
 (newline)
 
 (define x (list 1 2 (list 3 4) 5))
@@ -153,12 +155,20 @@
 (newline)
 
 ; exercise 2.29
-(define (make-mobile left right) (list left right))
-(define (make-branch length structure) (list length structure))
+;(define (make-mobile left right) (list left right))
+;(define (make-branch length structure) (list length structure))
+;(define (left-branch mobile) (car mobile))
+;(define (right-branch mobile) (cadr mobile))
+;(define (branch-length branch) (car branch))
+;(define (branch-structure branch) (cadr branch))
+
+; another implementation of mobile and branch
+(define (make-mobile left right) (cons left right))
+(define (make-branch length structure) (cons length structure))
 (define (left-branch mobile) (car mobile))
-(define (right-branch mobile) (cadr mobile))
+(define (right-branch mobile) (cdr mobile))
 (define (branch-length branch) (car branch))
-(define (branch-structure branch) (cadr branch))
+(define (branch-structure branch) (cdr branch))
 
 (define (total-weight mobile)
  (define (branch-weight br)
@@ -176,8 +186,10 @@
  (let ((left-br (left-branch mobile))
 	   (right-br (right-branch mobile)))
   (and (= (branch-torque left-br) (branch-torque right-br))
-   (if (pair? (branch-structure left-br)) (mobile-balanced (branch-structure left-br)))
-   (if (pair? (branch-structure right-br)) (mobile-balanced (branch-structure right-br))))))
+   (if (pair? (branch-structure left-br)) 
+	(mobile-balanced (branch-structure left-br)) 1)
+   (if (pair? (branch-structure right-br)) 
+	(mobile-balanced (branch-structure right-br)) 1))))
 
 (define b1 (make-branch 10 20))
 (define b2 (make-branch 10 20))
