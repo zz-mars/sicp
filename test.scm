@@ -508,3 +508,111 @@
 (display (l-reverse (list 1 2 3 4)))
 (newline)
 
+; find pairs whose sum is prime
+(define (prime? n)
+ (define (first-divisor x)
+  (define (next n) 
+   (if (= n 2) 3 (+ n 2)))
+  (let ((sqrtn (sqrt n)))
+   (cond ((> x sqrtn) n)
+	((= (remainder n x) 0) x)
+	(else (first-divisor (next x))))))
+ (= (first-divisor 2) n))
+
+
+(define (prime-sum-pair n)
+ (define (pair-generator m)
+  (define (iter i res)
+	(let ((m/2 (/ m 2))
+		  (j (- m i)))
+	  (cond ((> i m/2) res)
+			((> j n) (iter (+ i 1) res))
+			(else (iter (+ i 1) (cons (list i (- m i)) res))))))
+  (iter 1 nil))
+ (list-map
+  (list-filter (enumerate-interval 3 (- (* n 2) 1)) prime?)
+  pair-generator))
+
+(display "======= prime-sum-pair ========")
+(newline)
+(display (prime-sum-pair 6))
+(newline)
+
+; sicp implementation
+(define (prime-sum-pair n)
+ (list-filter 
+  (list-accumulator 
+   (list-map (enumerate-interval 1 n)
+	(lambda (j) (list-map (enumerate-interval 1 (- j 1))
+				 (lambda (i) (list i j))))) append nil)
+  (lambda (p) (prime? (+ (car p) (cadr p))))))
+
+(display "======== sicp implementation ========")
+(newline)
+(display (prime-sum-pair 6))
+(newline)
+
+(define (flatmap lst f)
+ (list-accumulator (list-map lst f) append nil))
+
+(define (remove elem set)
+ (list-filter set (lambda (x) (not (= x elem)))))
+
+(define (permutations s)
+ (if (null? s) (list nil)
+  (flatmap s
+   (lambda (x) (list-map (permutations (remove x s))
+				(lambda (p) (cons x p)))))))
+
+(display "======== permutations test =========")
+(newline)
+(display (permutations (list 1 2 3)))
+(newline)
+
+; exercise 2.40
+(define (unique-pairs n)
+ (flatmap (enumerate-interval 2 n)
+  (lambda (j) (list-map (enumerate-interval 1 (- j 1))
+			   (lambda (i) (list i j))))))
+
+(display (unique-pairs 6))
+(newline)
+
+(define (prime-sum-pair n)
+ (list-filter (unique-pairs n)
+  (lambda (p) (prime? (+ (car p) (cadr p))))))
+
+(display "======== prime-sum-pair sicp implementation ========")
+(newline)
+(display (prime-sum-pair 6))
+(newline)
+
+; exercise 2.41
+; 1) i < j < k <= n
+; 2) i + j + k = s
+;(define (unique-triples n)
+; (flatmap (enumerate-interval 3 n)
+;  (lambda (k) (list-map (unique-pairs (- k 1))
+;			   (lambda (p) (append p (list k)))))))
+
+; permutation of x distinct ordered numbers
+; which are all below or equal to n
+(define (unique-x-permutations x n)
+ (if (= x 1) (list-map (enumerate-interval 1 n)
+			  (lambda (x) (list x)))
+  (flatmap (enumerate-interval x n)
+   (lambda (j) (list-map (unique-x-permutations (- x 1) (- j 1))
+				(lambda (i) (append i (list j))))))))
+
+(define (unique-triples n) (unique-x-permutations 3 n))
+
+(define (triple-permutation n s)
+ (list-filter (unique-triples n)
+  (lambda (tp) (= (+ (car tp) (cadr tp) (caddr tp)) s))))
+
+
+(display "======== triple-permutation ========")
+(newline)
+(display (triple-permutation 9 21))
+(newline)
+
