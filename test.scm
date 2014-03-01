@@ -279,11 +279,15 @@
 		  (lambda (x) (= (remainder x 2) 0))))
 (newline)
 
+;(define (list-accumulator lst f init-value)
+; (define (iter L res)
+;  (if (null? L) res
+;   (iter (cdr L) (f (car L) res))))
+; (iter lst init-value))
+
 (define (list-accumulator lst f init-value)
- (define (iter L res)
-  (if (null? L) res
-   (iter (cdr L) (f (car L) res))))
- (iter lst init-value))
+ (if (null? lst) init-value
+  (f (car lst) (list-accumulator (cdr lst) f init-value))))
 
 (display "======== list-accumulator ========")
 (newline)
@@ -336,5 +340,171 @@
 (display "======== even-fibs ========")
 (newline)
 (display (even-fibs 20))
+(newline)
+
+; exercise 2.33
+; (1)
+(define (l-map p lst)
+ (list-accumulator lst (lambda (x y) (cons (p x) (l-map p (cdr lst)))) nil))
+
+(display "======== l-map ========")
+(newline)
+(display (l-map (lambda (x) (* x x)) (list 1 2 3 4)))
+(newline)
+
+; (2)
+(define (l-append l1 l2)
+ (list-accumulator l1 cons l2))
+
+(display "======== l-append ========")
+(newline)
+(define l1 (list 1 2 3))
+(define l2 (list 4 5 6))
+(display (l-append l2 l1))
+(newline)
+
+; (3)
+(define (l-length lst)
+ (list-accumulator lst (lambda (x y) (+ 1 y)) 0))
+
+(display "======== l-length ========")
+(newline)
+(display (l-length (list 1 2 3 4 5 6 7)))
+(newline)
+
+; exercise 2.34
+(define (horner-eval x lst)
+ (list-accumulator lst (lambda (a0 a1) (+ a0 (* x a1))) 0))
+
+
+(display "======== horner-eval ========")
+(newline)
+(display (horner-eval 2 (list 1 3 0 5 0 1)))
+(newline)
+
+; exercise 2.35
+;(define (new-count-leaves t)
+; (list-accumulator (fringe t) (lambda (x y) (+ 1 y)) 0))
+(define (new-count-leaves t)
+ (list-accumulator (list-map t 
+					(lambda (x) (if (pair? x) 
+								 (new-count-leaves x) 1))) + 0))
+
+(display "======== new-count-leaves ========")
+(newline)
+(display (new-count-leaves (list (list 1 3) (list 0 (list 5 0) ) 1)))
+(newline)
+
+(define (make-list elem n)
+ (if (> n 0) (cons elem (make-list elem (- n 1))) nil))
+(display (make-list 1 10))
+(newline)
+; exercise 2.36
+; my implementation
+;(define (list-accumulator-n lst f init-value)
+; (define (vector-f x y)
+;  (if (null? y) nil
+;   (cons (f (car x) (car y)) (vector-f (cdr x) (cdr y)))))
+; (list-accumulator lst vector-f (make-list init-value (list-length (car x)))))
+
+(define (list-accumulator-n lst f init-value)
+ (if (null? (car lst)) nil
+  (cons (list-accumulator (list-map lst car) f init-value)
+   (list-accumulator-n (list-map lst cdr) f init-value))))
+
+(display "======== list-accumulator-n ========")
+(newline)
+(display (list-accumulator-n (list (list 1 2 3) (list 4 5 6) (list 7 8 9)) + 0))
+(newline)
+
+; exercise 2.37
+(define (dot-product v w)
+ (list-accumulator (list-accumulator-n (list v w) * 1) + 0))
+;(define (dot-product v w)
+; (list-accumulator (map * v w) + 0))
+(display (dot-product (list 1 2 3) (list 4 5 6)))
+(newline)
+
+;(define (matrix-*-vector m v)
+; (if (null? m) nil
+;  (cons (dot-product (car m) v)
+;   (matrix-*-vector (cdr m) v))))
+
+(define (matrix-*-vector m v)
+ (list-map m (lambda (x) (dot-product x v))))
+
+(define M (list (list 1 2 3 4) (list 4 5 6 6) (list 6 7 8 9)))
+(define V (list 1 2 3 4))
+
+(display "========== matrix-*-vector ===========")
+(newline)
+(display (matrix-*-vector M V))
+(newline)
+
+;(define (transpose m)
+; (if (null? (car m)) nil
+;  (cons (list-map m car) (transpose (list-map m cdr)))))
+
+(define (transpose m)
+ (list-accumulator-n m cons nil))
+
+(display (transpose M))
+(newline)
+
+;(define (matrix-*-matrix m n)
+; (define (helper o)
+;  (if (null? (car o)) nil
+;   (cons (matrix-*-vector m (list-map o car))
+;	(helper (list-map o cdr)))))
+; (transpose (helper n)))
+
+;(define (matrix-*-matrix m n)
+; (transpose (list-map (transpose n) (lambda (x) (matrix-*-vector m x)))))
+
+(define (matrix-*-matrix m n)
+ (let ((n-tranz (transpose n)))
+  (list-map m (lambda (x) (matrix-*-vector n-tranz x)))))
+
+(define N (list (list 2 7 1 5 7) (list 3 8 2 6 8)
+		   (list 4 9 3 7 9) (list 5 0 4 8 0)))
+
+(display "========== matrix-*-matrix ===========")
+(newline)
+(display (matrix-*-matrix M N))
+(newline)
+
+
+; exercise 2.38
+(define (fold-left lst f init-val)
+ (define (iter rest res)
+  (if (null? rest) res
+   (iter (cdr rest) (f res (car rest)))))
+ (iter lst init-val))
+
+(define fold-right list-accumulator)
+
+(display (fold-left (list 1 2 3) / 1))
+(newline)
+(display (fold-right (list 1 2 3) / 1))
+(newline)
+
+(display (fold-left (list 1 2 3) list nil))
+(newline)
+(display (fold-right (list 1 2 3) list nil))
+(newline)
+
+; exercise 2.39
+(define (l-reverse lst)
+ (fold-right lst
+  (lambda (x y) (append y (list x))) nil))
+
+(display (l-reverse (list 1 2 3 4)))
+(newline)
+
+(define (l-reverse lst)
+ (fold-left lst
+  (lambda (x y) (cons y x)) nil))
+
+(display (l-reverse (list 1 2 3 4)))
 (newline)
 
