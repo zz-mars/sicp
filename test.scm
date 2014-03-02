@@ -616,3 +616,22 @@
 (display (triple-permutation 9 21))
 (newline)
 
+; exercise 2.42
+(define (queens board-size)
+ (define (queens-col k)
+  (if (= k 0) (list nil)
+   (list-filter (flatmap (enumerate-interval 1 board-size)
+				 (lambda (new-row)
+				  (list-map (queens-col (- k 1))
+				   (lambda (already-placed)
+					(define (adjoin-new-row al k nr)
+					 (append al (list nr)))
+					(adjoin-new-row already-placed k new-row)))))
+	(lambda (guess) (safe? k guess)))))
+ (queens-col board-size))
+
+(display "======== eight-queens ========")
+(newline)
+(display (queens 8))
+(newline)
+
