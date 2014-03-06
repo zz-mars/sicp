@@ -6,15 +6,10 @@
    (iter (cdr L) (+ len 1))))
  (iter lst 0))
 
-(display (list-len (list 1 2 3)))
-(newline)
 (define (memq item x)
  (cond ((null? x) false)
   ((eq? item (car x)) x)
   (else (memq item (cdr x)))))
-
-(display (memq 'apple '(pear banana apple orange)))
-(newline)
 
 (define (equal? la lb)
  (cond ((and (null? la) (null? lb)) true)
@@ -24,14 +19,6 @@
 	(and ((if (pair? la-a) equal? eq?) la-a lb-a) 
 	 (equal? (cdr la) (cdr lb)))))
   (else false)))
-   
-(display (if (equal? '(this is a list) '(this is a list)) 
-		  "equal" "not equal"))
-(newline)
-
-(display (if (equal? '(this is a list) '(this '(is a) list)) 
-		  "equal" "not equal"))
-(newline)
 
 (define (variable? x) (symbol? x))
 (define (same-variable? x y)
@@ -39,47 +26,12 @@
 (define (=number? expr n)
  (and (number? expr) (= expr n)))
 
-; 1st implementation
-;(define (make-sum a b) 
-; (cond ((=number? a 0) b)
-;  ((=number? b 0) a)
-;  ((and (number? a) (number? b)) (+ a b))
-;  (else (list '+ a b))))
-;
-;(define (make-product a b)
-; (cond ((or (=number? a 0) (=number? b 0)) 0)
-;  ((eq? a '1) b)
-;  ((eq? b '1) a)
-;  ((and (number? a) (number? b)) (* a b))
-;  (else (list '* a b))))
-;(define (sum? x)
-; (and (pair? x) (eq? (car x) '+)))
-;(define (addend s) (cadr s))
-;(define (addgend s) 
-; (if (> (list-len s) 3)
-;  (append (list '+) (cddr s))
-;  (caddr s)))
-;(define (product? x)
-; (and (pair? x) (eq? (car x) '*)))
-;(define (multiplier p) (cadr p))
-;(define (multiplicand p)
-; (if (> (list-len p) 3)
-;  (append (list '*) (cddr p))
-;  (caddr p)))
-;
-;(define (exponentiation? expr)
-; (and (pair? expr) (eq? (car expr) '**)))
-;(define (base expr) (cadr expr))
-;(define (exponent expr) (caddr expr))
-;(define (make-exponentiation bs expn)
-; (cond ((=number? expn 0) 1)
-;  ((=number? expn 1) bs)
-;  (else (list '** bs expn))))
-
-; 2nd implementation
-; exercise 2.58 (a)
-; This works for fully parenthesized expressions
-; and some not fully parenthesized ones
+; For not fully parenthesized expressions,
+; we should be able to detect the situation below :
+;     (x * 3 + (x + y + 1)) in terms of x
+; So we can transform those ones which are not fully
+; parenthesized expressions into the fully parenthesized ones
+; before we do the deriv 
 (define (sum? expr)
  (and (pair? expr) (eq? (cadr expr) '+)))
 (define (addend expr) (car expr))
@@ -124,10 +76,14 @@
    (make-sum (deriv (addend expr) var)
 	(deriv (addgend expr) var)))
   ((product? expr)
-   (make-sum (make-product (multiplier expr)
+   (if (and (> (list-len expr) 3)
+		(eq? (cadddr expr) '+))
+	(deriv (append (list (list (car expr) (cadr expr) (caddr expr)))
+			(cdddr expr)) var)
+	(make-sum (make-product (multiplier expr)
 			  (deriv (multiplicand expr) var))
-	(make-product (deriv (multiplier expr) var)
-	 (multiplicand expr))))
+	 (make-product (deriv (multiplier expr) var)
+	  (multiplicand expr)))))
   ((exponentiation? expr)
    (let ((bs (base expr))
 		 (expn (exponent expr)))
@@ -137,22 +93,6 @@
   (else (display "unknown expression type!")
    (newline))))
 
-(display "======== deriv test =========")
-(newline)
-
-; test for 1st implementation
-;(display (deriv '(+ x 3) 'x))
-;(newline)
-;(display (deriv '(* x y) 'x))
-;(newline)
-;(display (deriv '(* (* x y) (+ x 3)) 'x ))
-;(newline)
-;(display (deriv '(+ (** (+ (** x 3) (* x y)) 2) (* x y)) 'x))
-;(newline)
-;(display (deriv '(* x y (+ x 3)) 'x))
-;(newline)
-
-; test for 2nd implementation
 (display (deriv '(x + 3 * (x + y + 2)) 'x))
 (newline)
 (display (deriv '(x + 3) 'x))
@@ -162,5 +102,11 @@
 (display (deriv '(x * y * (x + 3)) 'x))
 (newline)
 (display (deriv '((((x ** 3) + (x * y)) ** 2) + (x * y)) 'x))
+(newline)
+(display (deriv '(x * 3 + (x + y + 2)) 'x))
+(newline)
+(display (deriv '(x * ((x ** 2) + 2) + 3 * (x ** 3) * (x * y + (y ** 2))) 'x))
+(newline)
+(display (deriv '(x * ((x * y + 1) * x + 3 * x * y) + 2 * x * y) 'x))
 (newline)
 
