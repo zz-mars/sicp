@@ -11,19 +11,24 @@
    (iter (cdr L) (+ len 1))))
  (iter lst 0))
 
+; (list-split lst idx)
+; Split 'lst' from index 'idx'
+; return a list like this 
+; (part1 pivot part2)
 (define (list-split lst idx)
  (define (iter pt1 pt2 i)
   (cond ((< i idx)
 		 (iter (append pt1 (list (car pt2)))
 		  (cdr pt2) (+ i 1)))
-   ((= i idx) (list pt1 (car pt2) (cdr pt2)))))
+   ((= i idx) (list pt1 (car pt2) (cdr pt2)))
+   (else (list nil nil lst))))
  (if (> idx (list-len lst))
   (list lst nil nil)
   (iter nil lst 1)))
 
 (display "+++++++++++ list split ++++++++++")
 (newline)
-(display (list-split (list 1 2 3 4 5 6 7 8) 3))
+(display (list-split (list 1 2 3 4 5 6 7 8) 0))
 (newline)
 
 (define (list-filter lst f)
@@ -190,7 +195,7 @@
 (display (deriv '((((x ** 3) + (x * y)) ** 2) + (x * y)) 'x))
 (newline)
 
-; ===================== sets ======================
+; ===================== sets (list representation) ======================
 (define (element-of-set? x set)
  (cond ((null? set) false)
   ((equal? x (car set)) true)
@@ -208,28 +213,28 @@
 (define (intersection-set s1 s2)
  (list-filter s1 (lambda (elem) (element-of-set? elem s2))))
 
-; =============== 2nd implementation of set ===============
-(define (element-of-set? x set)
+; =============== set (ordered list representation)===============
+(define (ol-element-of-set? x set)
  (cond ((null? set) false)
   ((< x (car set)) flase)
   ((= x (car set)) true)
-  (else (element-of-set? x (cdr set)))))
+  (else (ol-element-of-set? x (cdr set)))))
 
-(define (intersection-set s1 s2)
+(define (ol-intersection-set s1 s2)
  (if (or (null? s1) (null? s2)) nil
   (let ((x1 (car s1))
 		(y1 (car s2)))
-   (cond ((< x1 y1) (intersection-set (cdr s1) s2))
-	((= x1 y1) (cons x1 (intersection-set (cdr s1) (cdr s2))))
-	((> x1 y1) (intersection-set s1 (cdr s2)))))))
+   (cond ((< x1 y1) (ol-intersection-set (cdr s1) s2))
+	((= x1 y1) (cons x1 (ol-intersection-set (cdr s1) (cdr s2))))
+	((> x1 y1) (ol-intersection-set s1 (cdr s2)))))))
 
-(define (adjoin-set x set)
+(define (ol-adjoin-set x set)
  (cond ((null? set) (list x))
   ((< x (car set)) (cons x set))
   ((= x (car set)) set)
-  (else (cons (car set) (adjoin-set x (cdr set))))))
+  (else (cons (car set) (ol-adjoin-set x (cdr set))))))
 
-(define (union-set s1 s2)
+(define (ol-union-set s1 s2)
  (define (iter res-part1 res-part2 items-left)
   (cond ((null? items-left) (append res-part1 res-part2))
    ((null? res-part2) (append res-part1 items-left))
@@ -245,20 +250,26 @@
 
 (define S1 (list 1 2 3 4 5))
 (define S2 (list 1 3 5 7 9))
-(if (element-of-set? 3 S1)
+(display "=========== ordered-list representation ============")
+(newline)
+(display S1)
+(newline)
+(display S2)
+(newline)
+(if (ol-element-of-set? 3 S1)
  (display "yes")
  (display "no"))
 (newline)
-(if (element-of-set? 7 S1)
+(if (ol-element-of-set? 7 S1)
  (display "yes")
  (display "no"))
 (newline)
 (newline)
-(display (adjoin-set 6 S2))
+(display (ol-adjoin-set 6 S2))
 (newline)
-(display (union-set S1 S2))
+(display (ol-union-set S1 S2))
 (newline)
-(display (intersection-set S1 S2))
+(display (ol-intersection-set S1 S2))
 (newline)
 
 ; ============ tree representation ===========
@@ -270,25 +281,25 @@
 (define (make-entry entry-val left right)
  (list entry-val left right))
 
-(define (element-of-set? x set)
+(define (t-element-of-set? x set)
  (if (null? set) false
   (let ((ent-val (entry set)))
    (cond 
-	((< x ent-val) (element-of-set? x (left-branch set)))
+	((< x ent-val) (t-element-of-set? x (left-branch set)))
 	((= x ent-val) true)
-	((> x ent-val) (element-of-set? x (right-branch set)))))))
+	((> x ent-val) (t-element-of-set? x (right-branch set)))))))
 
-(define (adjoin-set x set)
+(define (t-adjoin-set x set)
  (if (null? set) (make-entry x nil nil)
   (let ((ent-val (entry set))
 		(l-b (left-branch set))
 		(r-b (right-branch set)))
    (cond ((< x ent-val) (make-entry ent-val
-						 (adjoin-set x l-b) r-b))
+						 (t-adjoin-set x l-b) r-b))
 	((= x ent-val) set)
 	((> x ent-val) 
 	 (make-entry ent-val
-	  l-b (adjoin-set x r-b)))))))
+	  l-b (t-adjoin-set x r-b)))))))
 
 ; exercise 2.63
 (define (tree->list tree)
@@ -380,23 +391,131 @@
 (newline)
 
 ; exercise 2.64
+; (1) list is null 
+;	--> nil
+; (2) length of list is 1 
+;	--> make a tree of only one node
+; (3) length of list > 1
+;	--> split the list into three parts
+;	1) left branch
+;	2) root node
+;	3) right branch
+;	make-entry with this three parts
 (define (list->tree lst)
  (if (null? lst) nil
   (let ((l-len (list-len lst)))
    (if (= l-len 1)
 	(make-entry (car lst) nil nil)
-	(let ((splt (list-split lst (/ 
-			 (if (= (remainder l-len 2) 0)
-			  l-len (+ l-len 1)) 2))))
-	 (display splt)
-	 (newline)
+	(let ((splt (list-split lst (quotient (+ l-len 1) 2))))
 	 (make-entry (cadr splt) 
 	  (list->tree (car splt))
 	  (list->tree (caddr splt))))))))
 
-(define T (list->tree (list 1 2 3 4 5 6 7 8 9)))
+(define T (list->tree (list 1 3 5 7 9 11)))
+
+(display "+++++++++++++ list->tree +++++++++++")
+(newline)
 (display T)
 (newline)
 (display (tree->list T))
 (newline)
+
+; exercise 2.64 : sicp implementation
+(define (partial-tree lst n)
+ (if (= n 0) (cons nil lst)
+  (let ((left-sz (quotient n 2)))
+   (let ((left-part (partial-tree lst left-sz)))
+	(let ((left-tree (car left-part))
+		  (non-left (cdr left-part))
+		  (right-sz (- n (+ left-sz 1))))
+	 (let ((entry-val (car non-left))
+		   (right-part (partial-tree (cdr non-left) right-sz)))
+	  (cons (make-entry entry-val left-tree (car right-part))
+	   (cdr right-part))))))))
+
+(define (list->tree1 lst)
+ (car (partial-tree lst (list-len lst))))
+
+(display "+++++++++++++ list->tree sicp implementation +++++++++++")
+(newline)
+(define T1 (list->tree1 (list 1 3 5 7 9 11)))
+(display T1)
+(newline)
+(display (tree->list T1))
+(newline)
+
+; exercise 2.65
+(define (t-union-set s1 s2)
+ (list->tree1 
+  (ol-union-set
+   (tree->list-1 s1)
+   (tree->list-2 s2))))
+
+(define (t-intersection-set s1 s2)
+ (list->tree
+  (ol-intersection-set
+   (tree->list-1 s1)
+   (tree->list-2 s2))))
+
+(display "++++++++++++ exercise 2.65 +++++++++++")
+(newline)
+(display (t-intersection-set T1 T2))
+(newline)
+(display (t-union-set T1 T2))
+(newline)
+
+; huffman tree
+(define (make-leaf symbol weight)
+ (list 'leaf symbol weight))
+(define (leaf? obj)
+ (eq? (car obj) 'leaf))
+(define (symbol-leaf leaf)
+ (cadr leaf))
+(define (weight-leaf leaf)
+ (caddr leaf))
+
+(define (left-branch t) (car t))
+(define (right-branch t) (cadr t))
+(define (symbols t)
+ (if (leaf? t)
+  (symbol-leaf t)
+  (caddr t)))
+(define (weight t)
+ (if (leaf? t)
+  (weight-leaf t)
+  (cadddr t)))
+(define (make-code-tree left right)
+ (list left right
+  (append (symbols left) (symbols right))
+  (+ (weight left) (weight right))))
+
+(define (decode bits tree)
+ (define (next-branch i current-branch)
+  (cond ((= i 0) (left-branch current-branch))
+   ((= i 1) (right-branch current-branch))
+   (else (display "error encoding!")
+	(newline))))
+ (define (iter bts res current-branch)
+  (if (null? bts) res
+   (let ((next-b (next-branch (car bts) current-branch)))
+	(if (leaf? next-b)
+	 (iter (cdr bts)
+	  (append res (list (symbol-leaf next-b))) tree)
+	 (iter (cdr bts) res next-b)))))
+ (iter bits nil tree))
+
+(define (hufm-adjoin-set x set)
+ (cond ((null? set) (list x))
+  ((< (weight x) (weight (car set)))
+   (cons x set))
+  (else (cons (car set) (hufm-adjoin-set x (cdr set))))))
+
+(define (make-leaf-set pairs)
+ (define (iter p res)
+  (if (null? p) res
+   (let ((pair (car p)))
+	(iter (cdr p)
+	 (hufm-adjoin-set (make-leaf (car pair)
+					   (cadr pair)) res)))))
+ (iter pairs nil))
 
