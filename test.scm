@@ -465,6 +465,7 @@
 (newline)
 
 ; huffman tree
+; leaf : ('leaf symbol weight)
 (define (make-leaf symbol weight)
  (list 'leaf symbol weight))
 (define (leaf? obj)
@@ -474,11 +475,13 @@
 (define (weight-leaf leaf)
  (caddr leaf))
 
+; general tree node : 
+; (left-branch right-branch symbol-list total-weight)
 (define (left-branch t) (car t))
 (define (right-branch t) (cadr t))
 (define (symbols t)
  (if (leaf? t)
-  (symbol-leaf t)
+  (list (symbol-leaf t))
   (caddr t)))
 (define (weight t)
  (if (leaf? t)
@@ -510,6 +513,8 @@
    (cons x set))
   (else (cons (car set) (hufm-adjoin-set x (cdr set))))))
 
+; make-leaf-set :
+; input : (('A 3) ('B 2) ('C 1))
 (define (make-leaf-set pairs)
  (define (iter p res)
   (if (null? p) res
@@ -518,4 +523,106 @@
 	 (hufm-adjoin-set (make-leaf (car pair)
 					   (cadr pair)) res)))))
  (iter pairs nil))
+(display "00000000 huffman make-leaf-set test 0000000000")
+(newline)
+(display (make-leaf-set '((A 3) (B 2) (C 1))))
+(newline)
+
+(define (make-huffman-tree-helper leaf-set)
+ (let ((set-len (list-len leaf-set)))
+  (cond ((= set-len 0) nil)
+   ((= set-len 1) (car leaf-set))
+   (else (make-huffman-tree-helper
+		  (hufm-adjoin-set 
+		   (make-code-tree 
+			(car leaf-set) (cadr leaf-set))
+		   (cddr leaf-set)))))))
+
+(define (make-huffman-tree pairs)
+ (make-huffman-tree-helper (make-leaf-set pairs)))
+
+(display "=========== make-huffman-tree test ==============")
+(newline)
+(display (make-huffman-tree '((A 3) (B 2) (C 1))))
+(newline)
+
+; exercise 2.67
+;(define sample-tree
+; (make-code-tree (make-leaf 'A 4)
+;  (make-code-tree
+;   (make-leaf 'B 2)
+;   (make-code-tree (make-leaf 'D 1)
+;	(make-leaf 'C 1)))))
+
+(define sample-tree
+ (make-huffman-tree '((A 4) (B 2) (C 1) (D 1))))
+
+(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+(display "-------------- decode test --------------")
+(newline)
+(display (decode sample-message sample-tree))
+(newline)
+
+; exercise 2.68 encode
+;(define (encode lst tree)
+; (define (iter items res current-branch)
+;  (if (null? items) res
+;   (let ((cur-ch (car items))
+;		 (br-items (symbols current-branch))
+;		 (l-br (left-branch current-branch))
+;		 (r-br (right-branch current-branch)))
+;	(let ((next-iter-arg 
+;		   (cond ((element-of-set? cur-ch (symbols l-br))
+;				  (list l-br 0))
+;			((element-of-set? cur-ch (symbols r-br))
+;			 (list r-br 1))
+;			(else nil))))
+;	 (let ((next-br (car next-iter-arg))
+;		   (next-enc (cdr next-iter-arg)))
+;	  (let ((next-items-br
+;			 (if (leaf? next-br)
+;			  (cons (cdr items) tree)
+;			  (cons items next-br))))
+;	   (iter (car next-items-br)
+;		(append res next-enc) (cdr next-items-br))))))))
+; (iter lst nil tree))
+
+(define (encode msg tree)
+ (define (encode-symbol cur-sym cur-br)
+  (if (leaf? cur-br) nil
+   (let ((l-br (left-branch cur-br))
+		 (r-br (right-branch cur-br)))
+	(cond ((element-of-set? cur-sym (symbols l-br))
+		   (cons 0 (encode-symbol cur-sym l-br)))
+	 ((element-of-set? cur-sym (symbols r-br))
+	  (cons 1 (encode-symbol cur-sym r-br)))
+	 (else (display "invalid --> ")
+	  (display cur-sym)
+	  (newline))))))
+ (if (null? msg) nil
+  (append (encode-symbol (car msg) tree)
+   (encode (cdr msg) tree))))
+
+(display "'''''''''''' encode test ''''''''''''''")
+(newline)
+(display (encode '(A D A B B C A) sample-tree))
+(newline)
+
+; exercise 2.70
+(define hufm-tree
+ (make-huffman-tree 
+  '((a 2) (na 16) (boom 1) (sha 3) (get 2) (yip 9) (job 2) (wah 1))))
+
+(display "=============== exercise 2.70 encode ================")
+(newline)
+(display hufm-tree)
+(newline)
+(display (encode '(get a job) hufm-tree))
+(newline)
+(display (encode '(sha na na na na na na na na) hufm-tree))
+(newline)
+(display (encode '(wah yip yip yip yip yip yip yip yip yip) hufm-tree))
+(newline)
+(display (encode '(sha boom) hufm-tree))
+(newline)
 
