@@ -152,3 +152,5 @@
 (define (make-from-polar a r)
  ((get 'make-from-ar 'polar) a r))
 
+; exercise 2.73
+
