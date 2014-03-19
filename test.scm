@@ -93,6 +93,66 @@
 (define (make-from-mag-ang r a)
  ((get 'make-from-mag-ang '(polar)) r a))
 
-(display (make-from-real-img 2 3))
+
+; message passing
+(define (make-from-real-img x y)
+ (lambda (op)
+  (cond ((eq? op 'real-part) x)
+   ((eq? op 'img-part) y)
+   ((eq? op 'magnitude)
+	(sqrt (+ (square x) (square y))))
+   ((eq? op 'angle) 
+	(atan y x))
+   (else 
+	(display "unrecognized operation")
+	(newline)))))
+
+(define (make-from-mag-ang r a)
+ (lambda (op)
+  (cond ((eq? op 'real-part)
+		 (* r (cos a)))
+   ((eq? op 'img-part)
+	(* r (sin a)))
+   ((eq? op 'magnitude) r)
+   ((eq? op 'angle) a)
+   (else 
+	(display "unrecognized operation")
+	(newline)))))
+
+(define ri (make-from-real-img 2 3))
+(define ma (make-from-mag-ang 2 0.7))
+
+(define (apply-generic op arg)
+ (arg op))
+
+(define (real-part z)
+ (apply-generic 'real-part z))
+(define (img-part z)
+ (apply-generic 'img-part z))
+(define (magnitude z)
+ (apply-generic 'magnitude z))
+(define (angle z)
+ (apply-generic 'angle z))
+
+(display "------- make-from-real-img test ----------")
+(newline)
+(display (real-part ri))
+(newline)
+(display (img-part ri))
+(newline)
+(display (magnitude ri))
+(newline)
+(display (angle ri))
+(newline)
+
+(display "------- make-from-mag-ang test ----------")
+(newline)
+(display (real-part ma))
+(newline)
+(display (img-part ma))
+(newline)
+(display (magnitude ma))
+(newline)
+(display (angle ma))
 (newline)
 
