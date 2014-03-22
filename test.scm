@@ -286,3 +286,24 @@
 (define (make-from-mag-ang r a)
  ((get 'make-from-mag-ang 'complex) r a))
 	
+(define (apply-generic op . args)
+ (let ((type-tags (map type-tag args)))
+  (let ((proc (get op type-tags)))
+   (if proc
+	(apply proc (map contents args))
+	(if (= (length args) 2)
+	 (let ((tp1 (car type-tags))
+		   (tp2 (cadr type-tags))
+		   (a1 (car args))
+		   (a2 (cadr args)))
+	  (let ((t1->t2 (get-coercion tp1 tp2))
+			(t2->t1 (get-coercion tp2 tp1)))
+	   (cond (t1->t2
+			  (apply-generic op (t1->t2 a1) a2))
+		(t2->t1 
+		 (apply-generic op a1 (t2->t1 a2)))
+		(else 
+		 (display "error--")
+		 (newline)))))
+	 (display "error++"))))))
+
