@@ -86,3 +86,65 @@
 (acc 'zzz 'deposite)
 (newline)
 
+(define rand
+ (let ((x random-init))
+  (lambda ()
+   (set! x (rand-update x))
+   x)))
+
+(define (estimate-pi trials)
+ (sqrt (/ 6 (monte-carlo trials cesaro-test))))
+
+(define (cesaro-test)
+ (= (gcd (rand) (rand)) 1))
+
+(define (monte-carlo trials test)
+ (define (iter rem cnt)
+  (cond ((= rem 0) (/ cnt trials))
+   ((test) (iter (- rem 1) (+ cnt 1)))
+   (else (iter (- rem 1) cnt))))
+ (iter trials 0))
+
+(define (random-in-range low high)
+ (let ((range (- high low)))
+  (+ low (random range))))
+
+(define (square x) (* x x))
+; exercise 3.5
+(define (area r)
+ (define (test x y)
+  (< (+ (square x) (square y)) (square r)))
+ (define (estimate-area trials tester)
+  (define (iter rem cnt)
+   (cond ((= rem 0) (/ (* cnt (square r)) trials))
+	((tester (random-in-range (- r) r) 
+	  (random-in-range (- r) r))
+	 (iter (- rem 1) (+ cnt 1)))
+	(else (iter (- rem 1) cnt))))
+  (iter trials 0))
+ (estimate-area 100 test))
+
+; exercise 3.6
+(define (rand cmd)
+ (let ((init-val 0))
+  (cond ((eq? cmd 'generate)
+		 (begin (set! init-val 
+				 (rand-update init-val))
+		  init-val))
+   ((eq? cmd 'reset)
+	(lambda (new-val)
+	 (set! init-val new-val)))
+   (else (display "illegal cmd")))))
+
+(define rand
+ (let ((init-val 0))
+  (lambda (cmd)
+   (cond ((eq? cmd 'generate)
+		  (begin (set! init-val
+				  (rand-update init-val))
+		   init-val))
+	((eq? cmd 'reset)
+	 (lambda (new-val)
+	  (set! init-val new-val)))
+	(else (display "illegal cmd"))))))
+
